@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  unraid-torrent-helper:
+    # Use the Dockerfile in this repo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: unraid-torrent-helper:latest
+    container_name: unraid-torrent-helper
+
+    # Web UI
+    ports:
+      - "8088:8088"
+
+    # IMPORTANT: identity binds so host paths inside the container are /mnt/user/...
+    # Mount any shares you plan to touch (torrents, media/torrents, reseeds, backup)
+    volumes:
+      - /mnt/user/torrents:/mnt/user/torrents:rw
+      - /mnt/user/media/torrents:/mnt/user/media/torrents:rw
+      - /mnt/user/media/reseeds:/mnt/user/media/reseeds:rw
+      - /mnt/user/media/backup:/mnt/user/media/backup:rw
+      - /mnt/user/appdata/unraid-torrent-helper:/config:rw
+
+    environment:
+      # qBittorrent Web API
+      QB_URL: "http://192.168.1.118:8080"
+      QB_USERNAME: "admin"
+      QB_PASSWORD: "adminadmin"
+
+      # App auth
+      APP_ADMIN_USER: "admin"
+      APP_ADMIN_PASS: "change-me"
+
+      # Where the app writes logs/db
+      APP_DATA_DIR: "/config"
+
+      # Path mappings: qB CONTAINER paths -> host paths (as seen inside THIS container)
+      # Add /reseeds or other roots if you use them.
+      APP_MAPPINGS: |
+        [
+          {"container":"/data","host":"/mnt/user/torrents"},
+          {"container":"/data/torrents","host":"/mnt/user/media/torrents"},
+          {"container":"/reseeds","host":"/mnt/user/media/reseeds"}
+        ]
+
+      # rsync flags (you can remove --inplace if you prefer)
+      APP_RSYNC_FLAGS: "-aHAX --info=progress2 --partial --inplace --numeric-ids --preallocate"
+
+      # Concurrency of simultaneous migrations
+      APP_MAX_CONCURRENT: "2"
+
+    # On Unraid, matching share ownership is usually nobody:users (99:100)
+    user: "99:100"
+
+    restart: unless-stopped

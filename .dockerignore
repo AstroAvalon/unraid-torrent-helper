@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# Local env and IDE
+.vscode
+**/*.log
+
+# Python locals
+backend/venv
+backend/__pycache__
+backend/.pytest_cache
+backend/.mypy_cache
+
+# Node locals
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/.cache
+
+# Don’t send caches or big temp dirs to Docker build context
